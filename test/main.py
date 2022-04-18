@@ -33,7 +33,7 @@ y = pow(g, x, q)
 
 ## Signing
 # M = "This is the message"
-file = "./test/test.pdf"
+file = "./test.pdf"
 BLOCK_SIZE =  os.path.getsize(file) 
 k = randint(1, q - 1)
 r = pow(g, k, q)
