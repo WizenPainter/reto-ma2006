@@ -9,13 +9,11 @@ def hashThis(r, M):
     return int(hash.hexdigest(),16);
 
 def hashPDF(file, BLOCK_SIZE):
-    hash=sha256()
     with open(file, 'rb') as f: # Open the file to read it's bytes
         fb = f.read(BLOCK_SIZE) # Read from the file. Take in the amount declared above
-        while len(fb) > 0: # While there is still data being read from the file
-            hash.update(fb) # Update the hash
-            fb = f.read(BLOCK_SIZE) # Read the next block from the file
-    return int(hash.hexdigest(),16)
+    while len(fb) > 0: # While there is still data being read from the file
+        hash.update(fb) # Update the hash
+        fb = f.read(BLOCK_SIZE) # Read the next block from the file
 
 
 ## Notation
@@ -33,20 +31,17 @@ y = pow(g, x, q)
 
 ## Signing
 # M = "This is the message"
-file = "./test.pdf"
+file = "D:\Documentos\pdf-test.pdf"
 BLOCK_SIZE =  os.path.getsize(file) 
 k = randint(1, q - 1)
 r = pow(g, k, q)
 # e = hashThis(r, M) % q # part 1 of signature
 e = hashPDF(file, BLOCK_SIZE)
-print(e)
 s = (k - (x * e)) % (q-1) # part 2 of signature
 
 ## Verification
 
 rv = (pow(g, s, q) * pow (y, e, q)) % q
-# ev = hashThis(rv, M) % q
-ev = hashPDF(file, rv)
+ev = hashThis(rv, M) % q
 
 print ("e " + str(e) + " should equal ev " + str(ev))
-print(e == ev)
