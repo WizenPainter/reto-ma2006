@@ -25,6 +25,9 @@ def create_keypair(n_keys: int):
             "privateKey": hex_privkey,
             "publicKey": bytes_from_point(publickey).hex()
         })
+    json_object = json.dumps(users, indent=4)
+    with open("users.json", "w") as f:
+        f.write(json_object)
     return users
 
 

@@ -59,6 +59,8 @@ while True:           # Event Loop
 
 
     elif event == "Verificar":
+        with open('users.json', 'w') as f:
+            datos = f.read()
         print(values['-Archivo-'])
         size = os.path.getsize(values['-Archivo-']) 
         M = hashPDF(values['-Archivo-'], size)
