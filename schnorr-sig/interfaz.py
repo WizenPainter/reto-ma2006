@@ -21,7 +21,8 @@ def make_win1():
 
 def make_win2():
 
-    layout = [[sg.Text('Inserta la Clave Pública (o agregada si se utilizó el esquema MuSig):')],
+    layout = [[sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo2-")],
+    [sg.Text('Inserta la Clave Pública (o agregada si se utilizó el esquema MuSig):')],
               [sg.Input(key='-Clave-', enable_events=True)],
               [sg.Text('Inserta la Firma Generada:')],
               [sg.Input(key='-Firma-', enable_events=True)],
@@ -59,9 +60,9 @@ while True:           # Event Loop
 
 
     elif event == "Verificar":
-        print(values['-Archivo-'])
-        size = os.path.getsize(values['-Archivo-']) 
-        M = hashPDF(values['-Archivo-'], size)
+        print(values['-Archivo2-'])
+        size = os.path.getsize(values['-Archivo2-']) 
+        M = hashPDF(values['-Archivo2-'], size)
         pubkey_bytes = bytes.fromhex(values["-Clave-"])
         sig_bytes = bytes.fromhex(values["-Firma-"])
 
