@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 import create_keypair as ckp
 import schnorr_lib as sl
 import os
+import json
 
 def hashPDF(file, BLOCK_SIZE):
     # hash=sha256()
@@ -12,14 +13,20 @@ def hashPDF(file, BLOCK_SIZE):
 
 
 sg.theme("DarkTeal2")
+# layout = [[sg.Text('Escribir mail del destinatario')],
+#         [sg.Text('Mail: '), sg.InputText()],#[sg.T("")], 
+#         [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
+#         [sg.Button("Generar firmas Schnorr")],[sg.T("")],
+#         [sg.Text('Inserta la Clave Pública (o agregada si se utilizó el esquema MuSig):')],
+#         [sg.Input(key='-Clave-', enable_events=True)],
+#         [sg.Text('Inserta la Firma Generada:')],
+#         [sg.Input(key='-Firma-', enable_events=True)],
+#         [sg.Button("Verificar Firma"), sg.Button("Salir")]]
+
 layout = [[sg.Text('Escribir mail del destinatario')],
         [sg.Text('Mail: '), sg.InputText()],#[sg.T("")], 
         [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
         [sg.Button("Generar firmas Schnorr")],[sg.T("")],
-        [sg.Text('Inserta la Clave Pública (o agregada si se utilizó el esquema MuSig):')],
-        [sg.Input(key='-Clave-', enable_events=True)],
-        [sg.Text('Inserta la Firma Generada:')],
-        [sg.Input(key='-Firma-', enable_events=True)],
         [sg.Button("Verificar Firma"), sg.Button("Salir")]]
 
 ###Building Window
@@ -40,18 +47,22 @@ while True:
         Signature = sig.hex()
 
         sg.Popup("Clave Pública: ", PubPublicKey, "Firma: ", Signature)
-
-        f = open("mydocument.txt", mode = "w")
-        f.write("Clave Pública: " + PubPublicKey + "Firma: " + Signature)
-        f.close
+        datos = {'clave publica' : PubPublicKey,'firma' : Signature}
+        # with open("mydocument.txt", mode = "w") as f:
+        #     f.write("Clave Publica: " + PubPublicKey + "\nFirma: " + Signature)
+        with open('json_data.json', 'w') as outfile:
+            json.dump(datos, outfile, indent=2)
 
     elif event == "Verificar Firma":
         print(values['-Archivo-'])
         size = os.path.getsize(values['-Archivo-']) 
         M = hashPDF(values['-Archivo-'], size)
-        pubkey_bytes = bytes.fromhex(values["-Clave-"])
-        sig_bytes = bytes.fromhex(values["-Firma-"])
-
+        # pubkey_bytes = bytes.fromhex(values["-Clave-"])
+        # sig_bytes = bytes.fromhex(values["-Firma-"])
+        with open('json_data.json', 'r') as f:
+            data = json.load(f)
+        pubkey_bytes = bytes.fromhex(data['clave publica'])
+        sig_bytes = bytes.fromhex(data['firma'])
         result = sl.schnorr_verify(M, pubkey_bytes, sig_bytes)
 
         if result:
