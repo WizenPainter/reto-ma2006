@@ -2,12 +2,12 @@
     "$schema": "./users_schema.json",
     "users": [
         {
-            "privateKey": "46d4edc6ebb0b4e3e4774fc48badc203b1882b6ea370f353742ff7e7b45e2f2d",
-            "publicKey": "9808bd6c95b9a97079788b14369c5b5d164b914ecbd644067c868200f016019f"
+            "privateKey": "ea2588ddcddfee3c37ca9ed21260132a03ca661034f51e9fdbc6ae5d1cae984d",
+            "publicKey": "5d6a65e19f48968e6a2fa76cb36223ef9e7d5d9319108e24c3a8c70aa7ba94cf"
         },
         {
-            "privateKey": "07d3acc4633e11ccc5111671a9c00027abf53d4c7527634e4f3f8e8061abcd18",
-            "publicKey": "470c8cfc2983f3d0ff7b274e502bc2d901c8f90c257d46174d4db351eb057343"
+            "privateKey": "c5ff90de190f693acf384d1970d50b285becdd8099afcbd3719d884902c6f658",
+            "publicKey": "eef233a24b03f214dc2af7b363688af12b9103ba81abf10fd7ef100cc619d988"
         }
     ]
 }

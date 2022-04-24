@@ -82,7 +82,7 @@ while True:
         # sig_bytes = bytes.fromhex(values["-Firma-"])
         with open('json_data.json', 'r') as f:
             data = json.load(f)
-        pubkey_bytes = bytes.fromhex(data['clave publica'])
+        pubkey_bytes = bytes.fromhex(data['firma agregada'])
         sig_bytes = bytes.fromhex(data['firma'])
         result = sl.schnorr_verify(M, pubkey_bytes, sig_bytes)
 

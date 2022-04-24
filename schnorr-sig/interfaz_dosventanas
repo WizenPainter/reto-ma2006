@@ -1,0 +1,92 @@
+import PySimpleGUI as sg
+import create_keypair as ckp
+import schnorr_lib as sl
+import os
+import json 
+
+def hashPDF(file, BLOCK_SIZE):
+    # hash=sha256()
+    with open(file, 'rb') as f: # Open the file to read it's bytes
+        fb = f.read(BLOCK_SIZE) # Read from the file. Take in the amount declared above
+        M = sl.sha256(fb)
+    return M
+
+def make_win1():
+
+    layout = [[sg.Text('Escribir mail del destinatario')],
+        [sg.Text('Mail: '), sg.InputText()],#[sg.T("")],
+        [sg.Button("Generar Esquema MuSig"),sg.Button("Verificar Firma"), sg.Button('Salir')]]
+    return sg.Window('Programa de Firmas Schnorr', layout, finalize=True)
+
+
+def make_win2():
+
+    layout = [[sg.Text('The second window')],
+              [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
+              [sg.Text("Ingresa el numero de Claves por generar:")],
+              [sg.Input(key='-Claves-', enable_events=True)],
+              [sg.Button('Firmar el Documento'),sg.Button('Salir')]]
+    return sg.Window('Segunda Ventana', layout, finalize=True)
+
+def make_win3():
+
+    layout = [[sg.Text('Ventana de Verificación')],
+            [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo2-")],
+            [sg.Button("Verificar"), sg.Button("Salir")]]
+    return sg.Window('Tercera Ventana', layout, finalize=True)
+
+
+window1, window2 = make_win1(), None        # start off with 1 window open
+
+while True:             # Event Loop
+    window, event, values = sg.read_all_windows()
+    if event == sg.WIN_CLOSED or event == 'Salir':
+        window.close()
+        if window == window2:       # if closing win 2, mark as closed
+            window2 = None
+        elif window == window1:     # if closing win 1, exit program
+            break
+
+    elif event == 'Generar Esquema MuSig' and not window2:
+        window2 = make_win2()
+
+    elif event == 'Firmar el Documento':
+        size = os.path.getsize(values["-Archivo-"])
+
+        n_keys = int(float(values["-Claves-"]))
+
+        users = ckp.create_keypair(n_keys)["users"]
+        M = hashPDF(values["-Archivo-"], size)
+        sig, X, privada = sl.schnorr_musig_sign(M, users)
+
+        Aggregated_Key = X.hex()
+        Signature = sig.hex()
+        #llave_privada = privada.hex()
+
+        sg.Popup("Firma Privada", privada, "Firma Agregada: ", Aggregated_Key, "Firma: ", Signature)
+        datos = {'firma agregada' : Aggregated_Key,'firma' : Signature}
+
+        with open('json_data.json', 'w') as outfile:
+            json.dump(datos, outfile, indent=2)
+
+    elif event == 'Verificar Firma':
+        window3 = make_win3()
+
+    elif event == 'Verificar':
+        size = os.path.getsize(values['-Archivo2-']) 
+        M = hashPDF(values['-Archivo2-'], size)
+        # pubkey_bytes = bytes.fromhex(values["-Clave-"])
+        # sig_bytes = bytes.fromhex(values["-Firma-"])
+        with open('json_data.json', 'r') as f:
+            data = json.load(f)
+        pubkey_bytes = bytes.fromhex(data['firma agregada'])
+        sig_bytes = bytes.fromhex(data['firma'])
+        result = sl.schnorr_verify(M, pubkey_bytes, sig_bytes)
+
+        if result:
+            sg.Popup("La firma es VALIDA para este mensaje y clave pública")
+        else:
+            sg.Popup("La firma no es VALIDA para este mensaje y clave pública")
+
+    
+window.close()
