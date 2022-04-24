@@ -26,11 +26,13 @@ sg.theme("DarkTeal2")
 layout = [[sg.Text('Escribir mail del destinatario')],
         [sg.Text('Mail: '), sg.InputText()],#[sg.T("")], 
         [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
-        [sg.Button("Generar firmas Schnorr")],[sg.T("")],
+        [sg.Text("Ingresa el numero de Claves por generar:")],
+        [sg.Input(key='-Claves-', enable_events=True)],
+        [sg.Button("Generar Esquema MuSig")],[sg.T("")],
         [sg.Button("Verificar Firma"), sg.Button("Salir")]]
 
 ###Building Window
-window = sg.Window('', layout, size=(800,350))
+window = sg.Window('', layout, size=(800,250))
 
     
 while True:
@@ -38,20 +40,39 @@ while True:
    
     if event in (sg.WIN_CLOSED, "Salir"):
         break
-    elif event == "Generar firmas Schnorr":
-        size = os.path.getsize(values["-Archivo-"]) 
-        user = ckp.create_keypair(1)["users"]
+#    elif event == "Generar firmas Schnorr":
+#        size = os.path.getsize(values["-Archivo-"]) 
+#        user = ckp.create_keypair(1)["users"]
+#        M = hashPDF(values["-Archivo-"], size)
+#        sig = sl.schnorr_sign(M, user[0]["privateKey"])
+#        PubPublicKey = user[0]["publicKey"]
+#        Signature = sig.hex()
+#
+#        sg.Popup("Clave Pública: ", PubPublicKey, "Firma: ", Signature)
+#        datos = {'clave publica' : PubPublicKey,'firma' : Signature}
+#        # with open("mydocument.txt", mode = "w") as f:
+#       #     f.write("Clave Publica: " + PubPublicKey + "\nFirma: " + Signature)
+#        with open('json_data.json', 'w') as outfile:
+#            json.dump(datos, outfile, indent=2)
+
+    elif event == "Generar Esquema MuSig":
+        size = os.path.getsize(values["-Archivo-"])
+
+        n_keys = int(float(values["-Claves-"]))
+
+        users = ckp.create_keypair(n_keys)["users"]
         M = hashPDF(values["-Archivo-"], size)
-        sig = sl.schnorr_sign(M, user[0]["privateKey"])
-        PubPublicKey = user[0]["publicKey"]
+        sig, X, privada = sl.schnorr_musig_sign(M, users)
+
+        Aggregated_Key = X.hex()
         Signature = sig.hex()
 
-        sg.Popup("Clave Pública: ", PubPublicKey, "Firma: ", Signature)
-        datos = {'clave publica' : PubPublicKey,'firma' : Signature}
-        # with open("mydocument.txt", mode = "w") as f:
-        #     f.write("Clave Publica: " + PubPublicKey + "\nFirma: " + Signature)
+        sg.Popup("Firma Privada", privada, "Firma Agregada: ", Aggregated_Key, "Firma: ", Signature)
+        datos = {'firma agregada' : Aggregated_Key,'firma' : Signature}
+
         with open('json_data.json', 'w') as outfile:
             json.dump(datos, outfile, indent=2)
+
 
     elif event == "Verificar Firma":
         print(values['-Archivo-'])

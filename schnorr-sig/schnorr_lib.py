@@ -311,7 +311,7 @@ def schnorr_musig_sign(msg: bytes, users: list) -> bytes:
 
     if not schnorr_verify(msg, bytes_from_point(X), signature_bytes):
         raise RuntimeError('The created signature does not pass verification.')
-    return signature_bytes, bytes_from_point(X)
+    return signature_bytes, bytes_from_point(X), di
 
 
 # Generate Schnorr MuSig2 signature
