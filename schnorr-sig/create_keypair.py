@@ -22,6 +22,7 @@ def create_keypair(n_keys: int):
 
         hex_privkey = hex(privkey_even).replace('0x', '').rjust(64, '0')
         users["users"].append({
+            "nameUser": str(i),
             "privateKey": hex_privkey,
             "publicKey": bytes_from_point(publickey).hex()
         })

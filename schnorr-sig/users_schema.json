@@ -5,6 +5,7 @@
       "keypair": {
          "type": "object",
          "properties": {
+            "nameUser": {"type": "string"}, 
             "publicKey": { "type": "string" },
             "privateKey": { "type": "string" }
          }

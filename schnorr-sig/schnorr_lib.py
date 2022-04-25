@@ -311,7 +311,7 @@ def schnorr_musig_sign(msg: bytes, users: list) -> bytes:
 
     if not schnorr_verify(msg, bytes_from_point(X), signature_bytes):
         raise RuntimeError('The created signature does not pass verification.')
-    return signature_bytes, bytes_from_point(X), di
+    return signature_bytes, bytes_from_point(X)
 
 
 # Generate Schnorr MuSig2 signature
@@ -421,6 +421,84 @@ def schnorr_musig2_sign(msg: bytes, users: list) -> bytes:
 
     signature_bytes = bytes_from_point(Rsum) + bytes_from_int(sSum)   
      
+    if not schnorr_verify(msg, bytes_from_point(X), signature_bytes):
+        raise RuntimeError('The created signature does not pass verification.')
+    return signature_bytes, bytes_from_point(X)
+
+
+def schnorr_musig_sign_test(msg: bytes, users: list) -> bytes:
+    if len(msg) != 32:
+        raise ValueError('The message must be a 32-byte array.')
+    
+    # Key aggregation (KeyAgg), L = h(P1 || ... || Pn)
+    L = b''
+    for u in users:
+        pkey = bytes.fromhex(u['publicKey'])
+        d0 = int_from_bytes(pkey)
+        P = point_mul(G, d0)
+        L += bytes_from_point(P)
+    L = sha256(L)
+
+    Rsum = None
+    X = None
+    for u in users:
+        # Get private key di and public key Pi
+        # Cambios de clave privada a clave publica
+        "TODO"
+        di = int_from_hex(u["publicKey"])
+        if not (1 <= di <= n - 1):
+            raise ValueError('The secret key must be an integer in the range 1..n-1.')
+        Pi = pubkey_point_gen_from_int(di)
+        assert Pi is not None
+        
+        # KeyAggCoef
+        # ai = h(L||Pi)
+        ai = int_from_bytes(sha256(L + bytes_from_point(Pi)))
+        u["ai"] = ai
+
+        # Computation of X~
+        # X~ = X1 + ... + Xn, Xi = ai * Pi 
+        X = point_add(X, point_mul(Pi, ai))
+
+        # Random ki with tagged hash
+        t = xor_bytes(bytes_from_int(di), tagged_hash("BIP0340/aux", get_aux_rand()))
+        ki = int_from_bytes(tagged_hash("BIP0340/nonce", t + bytes_from_point(Pi) + msg)) % n
+        if ki == 0:
+            raise RuntimeError('Failure. This happens only with negligible probability.')
+        
+        # Ri = ki * G
+        Ri = point_mul(G, ki)
+        assert Ri is not None
+        
+        # Rsum = R1 + ... + Rn
+        Rsum = point_add(Rsum, Ri)       
+        u["ki"] = ki
+
+    # The aggregate public key X~ needs to be y-even
+    if not has_even_y(X):
+        for i, u in enumerate(users):
+            users[i]["ai"] = n - u["ai"]
+
+    # If the aggregated nonce does not have an even Y
+    # then negate  individual nonce scalars (and the aggregate nonce)
+    if not has_even_y(Rsum):
+        for i, u in enumerate(users):
+            users[i]["ki"] = n - u["ki"]
+
+    # c = hash( Rsum || X || M )
+    c = int_from_bytes(tagged_hash("BIP0340/challenge", (bytes_from_point(Rsum) + bytes_from_point(X) + msg))) % n
+
+    sSum = 0
+    for u in users:
+        # Get private key di
+        di = int_from_hex(u["privateKey"])
+        
+        # sSum = s1 + ... + sn,  # si = ki + di * c * ai mod n
+        sSum += (di * c * u["ai"] + u["ki"]) % n
+    sSum = sSum % n
+
+    signature_bytes = bytes_from_point(Rsum) + bytes_from_int(sSum)
+
     if not schnorr_verify(msg, bytes_from_point(X), signature_bytes):
         raise RuntimeError('The created signature does not pass verification.')
     return signature_bytes, bytes_from_point(X)
