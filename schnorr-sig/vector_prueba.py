@@ -3,6 +3,23 @@ import create_keypair as ckp
 import schnorr_lib as sl
 import os
 import json
+import time
+import functools
+
+def timefunc(func):
+    """timefunc's doc"""
+
+    @functools.wraps(func)
+    def time_closure(*args, **kwargs):
+        """time_wrapper's doc string"""
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        time_elapsed = time.perf_counter() - start
+        print(f"Function: {func.__name__}, Time: {time_elapsed}")
+        return result
+
+    return time_closure
+
 
 def hashPDF(file, BLOCK_SIZE):
     # hash=sha256()
@@ -67,7 +84,7 @@ while True:
         Aggregated_Key = X.hex()
         Signature = sig.hex()
 
-        sg.Popup("Clave Privada", privada, "Clave Agregada: ", Aggregated_Key, "Firma: ", Signature)
+        sg.Popup("Firma Privada", privada, "Firma Agregada: ", Aggregated_Key, "Firma: ", Signature)
         datos = {'firma agregada' : Aggregated_Key,'firma' : Signature}
 
         with open('json_data.json', 'w') as outfile:
