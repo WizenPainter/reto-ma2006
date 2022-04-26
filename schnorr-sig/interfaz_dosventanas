@@ -13,8 +13,7 @@ def hashPDF(file, BLOCK_SIZE):
 
 def make_win1():
 
-    layout = [[sg.Text('Escribir mail del destinatario')],
-        [sg.Text('Mail: '), sg.InputText()],#[sg.T("")],
+    layout = [[sg.Button("Crear Claves Esquema")],
         [sg.Button("Generar Esquema MuSig"),sg.Button("Verificar Firma"), sg.Button('Salir')]]
     return sg.Window('Programa de Firmas Schnorr', layout, finalize=True)
 
@@ -87,6 +86,27 @@ while True:             # Event Loop
             sg.Popup("La firma es VALIDA para este mensaje y clave pública")
         else:
             sg.Popup("La firma no es VALIDA para este mensaje y clave pública")
+
+    elif event == "Crear Claves Esquema":
+        # sig_bytes = bytes.fromhex(values["-Firma-"])
+
+
+        with open('users.json', 'r') as f:
+            data = json.load(f)
+
+        priv_key = data['users'][0]['privateKey']
+        di = sl.int_from_hex(priv_key)
+
+        Pi = sl.pubkey_point_gen_from_int(di)
+
+        sg.Popup("Clave Publica", Pi, 'Clave Privada' , data['users'][0]['privateKey'])
+        datos = {'Clave Pública' : Pi,'Clave Privada' : data['users'][0]['privateKey']}
+
+
+
+        with open('esquema_musig.json', 'w') as outfile:
+            json.dump(datos, outfile)
+
 
     
 window.close()

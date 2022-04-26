@@ -1,0 +1,1 @@
+{"delvallegerardo7@gmail.com": [104, 111, 108, 97, 49, 50, 51, 52], "What was the name of your Elementry/Primary School?": "Mira", "What is your Favorite place in India?": "Siu", "In What City were you born?": "E", "sqs": true}
