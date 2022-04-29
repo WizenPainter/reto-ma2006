@@ -4,6 +4,10 @@ import schnorr_lib as sl
 import os
 import json 
 
+G = (0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798,
+     0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8)
+n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+
 def hashPDF(file, BLOCK_SIZE):
     # hash=sha256()
     with open(file, 'rb') as f: # Open the file to read it's bytes
@@ -13,16 +17,17 @@ def hashPDF(file, BLOCK_SIZE):
 
 def make_win1():
 
-    layout = [[sg.Button("Crear Claves Esquema")],
-        [sg.Button("Generar Esquema MuSig"),sg.Button("Verificar Firma"), sg.Button('Salir')]]
+    layout = [[sg.Button("Generar Esquema MuSig"),sg.Button("Verificar Firma")],
+            [sg.Button('Juntar Firmas'), sg.Button('Salir')]]
     return sg.Window('Programa de Firmas Schnorr', layout, finalize=True)
 
 
 def make_win2():
 
-    layout = [[sg.Text('The second window')],
+    layout = [[sg.Text('Esquema Firmas')],
               [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
-              [sg.Text("Ingresa el numero de Claves por generar:")],
+              [sg.Button("Crear Claves Esquema")],
+              [sg.Text("Ingresa el numero de usuario que firma:")],
               [sg.Input(key='-Claves-', enable_events=True)],
               [sg.Button('Firmar el Documento'),sg.Button('Salir')]]
     return sg.Window('Segunda Ventana', layout, finalize=True)
@@ -34,6 +39,11 @@ def make_win3():
             [sg.Button("Verificar"), sg.Button("Salir")]]
     return sg.Window('Tercera Ventana', layout, finalize=True)
 
+def make_win4():
+
+    layout = [[sg.Text('Esquema Firmas')],
+              [sg.Button('Generar Firma MuSig'),sg.Button('Salir')]]
+    return sg.Window('Segunda Ventana', layout, finalize=True)
 
 window1, window2 = make_win1(), None        # start off with 1 window open
 
@@ -52,21 +62,16 @@ while True:             # Event Loop
     elif event == 'Firmar el Documento':
         size = os.path.getsize(values["-Archivo-"])
 
-        n_keys = int(float(values["-Claves-"]))
+        n_usuario = int(float(values["-Claves-"]))
 
-        users = ckp.create_keypair(n_keys)["users"]
         M = hashPDF(values["-Archivo-"], size)
-        sig, X, privada = sl.schnorr_musig_sign(M, users)
+        s = sl.schnorr_musig_sign_test('claves.json', M, n_usuario)
 
-        Aggregated_Key = X.hex()
-        Signature = sig.hex()
+
         #llave_privada = privada.hex()
 
-        sg.Popup("Firma Privada", privada, "Firma Agregada: ", Aggregated_Key, "Firma: ", Signature)
-        datos = {'firma agregada' : Aggregated_Key,'firma' : Signature}
+        sg.Popup("Firma Usuario: ", s)
 
-        with open('json_data.json', 'w') as outfile:
-            json.dump(datos, outfile, indent=2)
 
     elif event == 'Verificar Firma':
         window3 = make_win3()
@@ -89,24 +94,74 @@ while True:             # Event Loop
 
     elif event == "Crear Claves Esquema":
         # sig_bytes = bytes.fromhex(values["-Firma-"])
-
+        size = os.path.getsize(values["-Archivo-"])
+        M = hashPDF(values["-Archivo-"], size)
 
         with open('users.json', 'r') as f:
             data = json.load(f)
 
         priv_key = data['users'][0]['privateKey']
+
+
         di = sl.int_from_hex(priv_key)
 
         Pi = sl.pubkey_point_gen_from_int(di)
 
-        sg.Popup("Clave Publica", Pi, 'Clave Privada' , data['users'][0]['privateKey'])
-        datos = {'Clave Pública' : Pi,'Clave Privada' : data['users'][0]['privateKey']}
+        t = sl.xor_bytes(sl.bytes_from_int(di), sl.tagged_hash("BIP0340/aux", sl.get_aux_rand()))
+        ki = sl.int_from_bytes(sl.tagged_hash("BIP0340/nonce", t + sl.bytes_from_point(Pi) + M)) % n
+        if ki == 0:
+            raise RuntimeError('Failure. This happens only with negligible probability.')
+        
+        # Ri = ki * G
+        Ri = sl.point_mul(G, ki)
+
+        assert Ri is not None
+
+        Pi = sl.pubkey_gen_from_hex(priv_key)
+
+        sg.Popup("Clave Publica", Pi.hex(), "Ri", Ri)
+
+        cl = str(sl.int_from_bytes(Pi))
+
+        Ri = str(Ri)
+        data = {'Clave Publica': cl,'Ri': Ri}
+
+        with open('claves_iniciales.json', 'w') as f:
+            json.dump(data, f)
+
+    elif event == 'Juntar Firmas':
+        window4 = make_win4()
+
+    elif event == 'Generar Firma MuSig':
+        with open('firmas_esquema.json', 'r') as f:
+            data = json.load(f)
+
+        Rsum = data[0]['Sumatoria R']
+
+        s_suma = 0
+        for i in data: 
+            s_i = i['firma']
+            s_suma += s_i
+
+        s_suma = s_suma % n
+
+        signature_bytes = sl.bytes_from_point(Rsum) + sl.bytes_from_int(s_suma)
 
 
+        X = sl.bytes_from_point(data[0]['firma agregada'])
 
-        with open('esquema_musig.json', 'w') as outfile:
-            json.dump(datos, outfile)
+        sg.Popup("Firma", signature_bytes.hex(), "Firma Agregada", X.hex())
+
+#        signature_bytes = sl.int_from_bytes(signature_bytes)
+
+        X = sl.int_from_bytes(X)
 
 
-    
+        datos_firma = {'Firma': signature_bytes.decode(encoding = 'UTF-8'), 'Firma Agregada': X}
+
+        with open('data.json', 'w') as f:
+            json.dump(datos_firma, f)    
+        
+
+
 window.close()

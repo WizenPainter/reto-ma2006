@@ -3,8 +3,13 @@
     "users": [
         {
             "nameUser": "0",
-            "privateKey": "ddfd955a0f87cca13ddba92d6f666e79b5dd19da30c6325e05add5840dcd7429",
-            "publicKey": "e5d9348776bdf211cb0a740271ea7d79c147f4f2c53c04b9710d225e29eef364"
+            "privateKey": "79af1e1f20fbdcce48192db269b2a171a63ea188e2e982fbae99d66e5d1174d0",
+            "publicKey": "5b6442ffd5bc4135f45caf0ce90f2a5597fbbb189ae5c8bda4c1278168b97b69"
+        },
+        {
+            "nameUser": "1",
+            "privateKey": "2588fa32510487d9e323eacf870c9b718b2d6f6f3e50be35d676cd953638c7ca",
+            "publicKey": "5d11a5c2f11bbf2a40b8f88d3957dc4c20c7befb6ff608d5ea3be767c2f8c366"
         }
     ]
 }
