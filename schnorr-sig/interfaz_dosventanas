@@ -79,13 +79,9 @@ while True:             # Event Loop
     elif event == 'Verificar':
         size = os.path.getsize(values['-Archivo2-']) 
         M = hashPDF(values['-Archivo2-'], size)
-        # pubkey_bytes = bytes.fromhex(values["-Clave-"])
-        # sig_bytes = bytes.fromhex(values["-Firma-"])
-        with open('json_data.json', 'r') as f:
-            data = json.load(f)
-        pubkey_bytes = bytes.fromhex(data['firma agregada'])
-        sig_bytes = bytes.fromhex(data['firma'])
-        result = sl.schnorr_verify(M, pubkey_bytes, sig_bytes)
+        
+
+        result = sl.schnorr_verify_test(M, 'data.json')
 
         if result:
             sg.Popup("La firma es VALIDA para este mensaje y clave pública")
@@ -117,14 +113,14 @@ while True:             # Event Loop
 
         assert Ri is not None
 
-        Pi = sl.pubkey_gen_from_hex(priv_key)
+        #Pi = sl.pubkey_gen_from_hex(priv_key)
 
-        sg.Popup("Clave Publica", Pi.hex(), "Ri", Ri)
+        sg.Popup("Clave Publica", Pi, "Ri", Ri)
 
-        cl = str(sl.int_from_bytes(Pi))
+        #cl = str(sl.int_from_bytes(Pi))
 
         Ri = str(Ri)
-        data = {'Clave Publica': cl,'Ri': Ri}
+        data = {'Clave Publica': str(Pi),'Ri': Ri, 'Ki': ki}
 
         with open('claves_iniciales.json', 'w') as f:
             json.dump(data, f)
@@ -156,10 +152,12 @@ while True:             # Event Loop
 
         X = sl.int_from_bytes(X)
 
+        signature_bytes = str(signature_bytes)
 
-        datos_firma = {'Firma': signature_bytes.decode(encoding = 'UTF-8'), 'Firma Agregada': X}
 
-        with open('data.json', 'w') as f:
+        datos_firma = {'Firma': signature_bytes, 'Firma Agregada': X}
+
+        with open('firma_digital.json', 'w') as f:
             json.dump(datos_firma, f)    
         
 

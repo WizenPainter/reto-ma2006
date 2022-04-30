@@ -263,15 +263,21 @@ def schnorr_musig_sign(msg: bytes, users: list) -> bytes:
 
         Pi = pubkey_point_gen_from_int(di)
         assert Pi is not None
+
         
+ #       pi_prueba = bytes_from_point(Pi)
+ #       print("Pi",int_from_bytes(pi_prueba))
+
         # KeyAggCoef
         # ai = h(L||Pi)
         ai = int_from_bytes(sha256(L + bytes_from_point(Pi)))
         u["ai"] = ai
 
+
         # Computation of X~
         # X~ = X1 + ... + Xn, Xi = ai * Pi 
         X = point_add(X, point_mul(Pi, ai))
+
 
         # Random ki with tagged hash
         t = xor_bytes(bytes_from_int(di), tagged_hash("BIP0340/aux", get_aux_rand()))
@@ -288,10 +294,12 @@ def schnorr_musig_sign(msg: bytes, users: list) -> bytes:
         Rsum = point_add(Rsum, Ri)       
         u["ki"] = ki
 
+
     # The aggregate public key X~ needs to be y-even
     if not has_even_y(X):
         for i, u in enumerate(users):
             users[i]["ai"] = n - u["ai"]
+
 
     # If the aggregated nonce does not have an even Y
     # then negate  individual nonce scalars (and the aggregate nonce)
@@ -301,20 +309,24 @@ def schnorr_musig_sign(msg: bytes, users: list) -> bytes:
 
     # c = hash( Rsum || X || M )
     c = int_from_bytes(tagged_hash("BIP0340/challenge", (bytes_from_point(Rsum) + bytes_from_point(X) + msg))) % n
+    print("c",c)
 
     sSum = 0
     for u in users:
+
+        print("ki", u['ki'])
         # Get private key di
         di = int_from_hex(u["privateKey"])
         
         # sSum = s1 + ... + sn,  # si = ki + di * c * ai mod n
         sSum += (di * c * u["ai"] + u["ki"]) % n
 
-    print(len(str(sSum)))
     sSum = sSum % n
-    print(len(str(sSum)))
 
+    print("Suma",sSum)
     signature_bytes = bytes_from_point(Rsum) + bytes_from_int(sSum)
+
+    print("sig", signature_bytes)
 
     if not schnorr_verify(msg, bytes_from_point(X), signature_bytes):
         raise RuntimeError('The created signature does not pass verification.')
@@ -440,43 +452,57 @@ def schnorr_musig_sign_test(path_clavesp, M, n_usario):
 
     L = b''
     for i in data: 
-        int_clave = int(i['Clave Publica'])
-        byte_clave = bytes_from_int(int_clave)
+        Pi = ast.literal_eval(i['Clave Publica'])
+        byte_clave = bytes_from_point(Pi)
         L += byte_clave
 
     L = sha256(L)
+
+    print(L)
 
     Rsum = None
     X = None
 
     lista_ai = []
+    lista_ki = []
     for u in data:
-        int_clave = int(u['Clave Publica'])
-        byte_clave = bytes_from_int(int_clave)
+        Pi = ast.literal_eval(u['Clave Publica'])
+    #    byte_clave = bytes_from_int(int_clave)
         int_ri = ast.literal_eval(u['Ri'])
+        ki = u['Ki']
 
-        ai = int_from_bytes(sha256(L + byte_clave))
+        ai = int_from_bytes(sha256(L + bytes_from_point(Pi)))
         lista_ai.append(ai)
 
-        X = point_add(X, point_mul(byte_clave, ai))
+        X = point_add(X, point_mul(Pi, ai))
 
-        Rsum = point_add(Rsum, int_ri)   
+        Rsum = point_add(Rsum, int_ri) 
+        lista_ki.append(ki)  
 
+    if not has_even_y(X):
+        cont = 0
+        for i in lista_ai:
+            lista_ai[cont] = n- i
+            cont +=1 
+
+    
+    if not has_even_y(Rsum):
+        cont = 0
+        for i in lista_ki:
+            lista_ki[cont] = n- i
+            cont +=1 
+    
     c = int_from_bytes(tagged_hash("BIP0340/challenge", (bytes_from_point(Rsum) + bytes_from_point(X) + M))) % n
 
     with open('users.json', 'r') as f:
         data_1 = json.load(f)
 
-    priv_key = data_1['users'][n_usario]['privateKey']
+    priv_key = data_1['users'][0]['privateKey']
     priv_key = int_from_hex(priv_key)
 
-    ki = ast.literal_eval(data[n_usario]['Ri'])
-    ki = bytes_from_point(ki)
-    ki = int_from_bytes(ki)
+   # ki = int(data[n_usario]['Ki'])
 
-
-    s = (c * priv_key* lista_ai[n_usario]+ ki) % n
-
+    s = (c * priv_key* lista_ai[n_usario]+ lista_ki[n_usario]) % n
 
     datos_firma = {'usario': n_usario, 'firma': s, 'firma agregada': X, "Sumatoria R": Rsum}
 
@@ -492,14 +518,15 @@ def schnorr_verify_test(M, archivo_verificacion) -> bool:
     if len(M) != 32:
         raise ValueError('The message must be a 32-byte array.')
 
-    with open(archivo_verificacion) as json_file:
+    with open('firma_digital.json') as json_file:
         data = json.load(json_file)
 
     clave_p = data['Firma']
+    sig = ast.literal_eval(clave_p)
 
-    clave_p = int()
+    clave_agregada = int(data['Firma Agregada'])
 
-    clave_agregada = data['Firma Agregada']
+    pubkey = bytes_from_int(clave_agregada)
 
     
     if len(pubkey) != 32:
@@ -511,7 +538,7 @@ def schnorr_verify_test(M, archivo_verificacion) -> bool:
     s = get_int_s_from_sig(sig)
     if (P is None) or (r >= p) or (s >= n):
         return False
-    e = int_from_bytes(tagged_hash("BIP0340/challenge", get_bytes_R_from_sig(sig) + pubkey + msg)) % n
+    e = int_from_bytes(tagged_hash("BIP0340/challenge", get_bytes_R_from_sig(sig) + pubkey + M)) % n
     R = point_add(point_mul(G, s), point_mul(P, n - e))
     if (R is None) or (not has_even_y(R)):
         # print("Please, recompute the sign. R is None or has even y")
