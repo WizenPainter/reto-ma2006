@@ -548,3 +548,14 @@ def schnorr_verify_test(M, archivo_verificacion) -> bool:
         return False
     return True
 
+
+def merge_JsonFiles(filename):
+    result = list()
+    for f1 in filename:
+        with open(f1, 'r') as infile:
+            result.append(json.load(infile))
+
+    with open('claves_firma.json', 'w') as output_file:
+        json.dump(result, output_file)
+
+    return True

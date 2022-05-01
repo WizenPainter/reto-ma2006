@@ -8,6 +8,8 @@ G = (0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798,
      0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8)
 n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 
+lista_documentos = []
+
 def hashPDF(file, BLOCK_SIZE):
     # hash=sha256()
     with open(file, 'rb') as f: # Open the file to read it's bytes
@@ -18,15 +20,16 @@ def hashPDF(file, BLOCK_SIZE):
 def make_win1():
 
     layout = [[sg.Button("Generar Esquema MuSig"),sg.Button("Verificar Firma")],
-            [sg.Button('Juntar Firmas'), sg.Button('Salir')]]
+            [sg.Button('Juntar Firmas'), sg.Button('Juntar Documentos'),sg.Button('Salir')]]
     return sg.Window('Programa de Firmas Schnorr', layout, finalize=True)
 
 
 def make_win2():
 
     layout = [[sg.Text('Esquema Firmas')],
-              [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
+              [sg.Text("Elegir el archivo para Firmar: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
               [sg.Button("Crear Claves Esquema")],
+              [sg.Text("Elegir el archivo con las claves: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo4-")],
               [sg.Text("Ingresa el numero de usuario que firma:")],
               [sg.Input(key='-Claves-', enable_events=True)],
               [sg.Button('Firmar el Documento'),sg.Button('Salir')]]
@@ -36,14 +39,25 @@ def make_win3():
 
     layout = [[sg.Text('Ventana de Verificación')],
             [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo2-")],
+            [sg.Text("Elegir el archivo con la firma: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo6-")],
             [sg.Button("Verificar"), sg.Button("Salir")]]
     return sg.Window('Tercera Ventana', layout, finalize=True)
 
 def make_win4():
 
     layout = [[sg.Text('Esquema Firmas')],
+            [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo5-")],
               [sg.Button('Generar Firma MuSig'),sg.Button('Salir')]]
-    return sg.Window('Segunda Ventana', layout, finalize=True)
+    return sg.Window('Cuarta Ventana', layout, finalize=True)
+
+def make_win5():
+
+    layout = [[sg.Text('Ventana para Juntar Documentos')],
+            [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo3-")],
+            [sg.Button('Agregar Documento'), sg.Button('Borrar Documentos')],
+            [sg.Button("Descargar Documento"), sg.Button("Salir")]]
+    return sg.Window('Quinta Ventana', layout, finalize=True)
+
 
 window1, window2 = make_win1(), None        # start off with 1 window open
 
@@ -65,7 +79,7 @@ while True:             # Event Loop
         n_usuario = int(float(values["-Claves-"]))
 
         M = hashPDF(values["-Archivo-"], size)
-        s = sl.schnorr_musig_sign_test('claves.json', M, n_usuario)
+        s = sl.schnorr_musig_sign_test('claves_firma.json', M, n_usuario)
 
 
         #llave_privada = privada.hex()
@@ -81,7 +95,8 @@ while True:             # Event Loop
         M = hashPDF(values['-Archivo2-'], size)
         
 
-        result = sl.schnorr_verify_test(M, 'data.json')
+        path_firma = values['-Archivo6-']
+        result = sl.schnorr_verify_test(M, path_firma)
 
         if result:
             sg.Popup("La firma es VALIDA para este mensaje y clave pública")
@@ -129,7 +144,9 @@ while True:             # Event Loop
         window4 = make_win4()
 
     elif event == 'Generar Firma MuSig':
-        with open('firmas_esquema.json', 'r') as f:
+
+        path_claves = values['-Archivo5-']
+        with open(path_claves, 'r') as f:
             data = json.load(f)
 
         Rsum = data[0]['Sumatoria R']
@@ -160,6 +177,21 @@ while True:             # Event Loop
         with open('firma_digital.json', 'w') as f:
             json.dump(datos_firma, f)    
         
+    elif event == 'Juntar Documentos':
+        window5 = make_win5()
+
+    elif event == 'Agregar Documento':
+        path_archivo = values["-Archivo3-"]
+        lista_documentos.append(path_archivo)
+        print(lista_documentos)
+
+    
+    elif event == 'Descargar Documento':
+        sl.merge_JsonFiles(lista_documentos)
+        sg.Popup('Se ha descargado el documento')
+
+    elif event == 'Borrar Documentos':
+        lista_documentos = []
 
 
 window.close()

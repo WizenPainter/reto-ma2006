@@ -3,9 +3,10 @@
     "users": [
         {
             "nameUser": "2",
-            "privateKey": "f7f9406a6c092ae4f566874256e07a80841e66304c0318cebd555b3260f8ff1a",
-            "publicKey": "ab30f2e76ebf786eb44b0cfed63756a2ea116c96f355409e2974afd1305085dc"
-        }
+            "privateKey": "492d111b2984a7f6573f52d143feb86738f778dfdd9fa3da6875a033fe20d30d",
+            "publicKey": "e1c4ca7556451f55a801e896aec3228274427bceef744b4a437e3e67b8273a09"
 
+
+        }
     ]
 }
