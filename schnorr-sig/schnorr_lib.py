@@ -446,7 +446,7 @@ def schnorr_musig2_sign(msg: bytes, users: list) -> bytes:
 
 
 
-def schnorr_musig_sign_test(path_clavesp, M, n_usario):
+def schnorr_musig_firmar(path_clavesp, M, n_usario):
     with open(path_clavesp) as json_file:
         data = json.load(json_file)
 
@@ -514,7 +514,7 @@ def schnorr_musig_sign_test(path_clavesp, M, n_usario):
 
 
 # Verify Schnorr signature
-def schnorr_verify_test(M, archivo_verificacion) -> bool:
+def schnorr_verify_musig(M, archivo_verificacion) -> bool:
     if len(M) != 32:
         raise ValueError('The message must be a 32-byte array.')
 

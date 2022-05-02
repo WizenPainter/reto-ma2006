@@ -101,7 +101,7 @@ while True:             # Event Loop
         n_usuario = int(float(values["-Claves-"]))
 
         M = hashPDF(values["-Archivo-"], size)
-        s = sl.schnorr_musig_sign_test('claves_firma.json', M, n_usuario)
+        s = sl.schnorr_musig_firmar('claves_firma.json', M, n_usuario)
 
 
         #llave_privada = privada.hex()
@@ -118,7 +118,7 @@ while True:             # Event Loop
         
 
         path_firma = values['-Archivo6-']
-        result = sl.schnorr_verify_test(M, path_firma)
+        result = sl.schnorr_verify_musig(M, path_firma)
 
         if result:
             sg.Popup("La firma es VALIDA para este mensaje y clave pública")
