@@ -17,15 +17,24 @@ def hashPDF(file, BLOCK_SIZE):
         M = sl.sha256(fb)
     return M
 
+
 def make_win1():
 
-    layout = [[sg.Button('Cambiar mis claves'),sg.Button('Generar mis claves Iniciales')],
-            [sg.Button("Generar mi Firma Esquema MuSig"),sg.Button("Verificar Firma")],
-            [sg.Button('Juntar Firmas'), sg.Button('Juntar Documentos'),sg.Button('Salir')]]
+    layout = [[sg.Text('Programa de Firmas Schnorr')],
+            [sg.Button("Cambiar mis claves"),sg.Button("Esquema MuSig")],
+            [sg.Button('Verificar Firma'), sg.Button('Salir')]]
+    return sg.Window('Ventana para Generar Claves Iniciales', layout, finalize=True)
+
+def make_win2():
+
+    layout = [[sg.Text('Ventana para Esquema MuSig')],
+            [sg.Button('Generar mis claves Iniciales'),sg.Button("Generar mi Firma Esquema MuSig")],
+            [sg.Button("Juntar Firmas"),sg.Button("Juntar Documentos")],
+            [sg.Button('Salir')]]
     return sg.Window('Programa de Firmas Schnorr', layout, finalize=True)
 
 
-def make_win2():
+def make_win3():
 
     layout = [[sg.Text('Esquema Firmas')],
             [sg.Text("Elegir el archivo para Firmar: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo-")],
@@ -35,7 +44,7 @@ def make_win2():
             [sg.Button('Firmar el Documento'),sg.Button('Regresar')]]
     return sg.Window('Firma Individual', layout, finalize=True)
 
-def make_win3():
+def make_win4():
 
     layout = [[sg.Text('Ventana de Verificación')],
             [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo2-")],
@@ -43,14 +52,14 @@ def make_win3():
             [sg.Button("Verificar"), sg.Button("Regresar")]]
     return sg.Window('Verificar Firma de un Documento', layout, finalize=True)
 
-def make_win4():
+def make_win5():
 
-    layout = [[sg.Text('Generación de firma Conjunta del Esquem')],
+    layout = [[sg.Text('Generación de firma Conjunta del Esquema')],
             [sg.Text("Elegir el archivo con las firmas individuales: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo5-")],
             [sg.Button('Generar Firma MuSig'),sg.Button('Regresar')]]
     return sg.Window('Generación de Esquema MuSig', layout, finalize=True)
 
-def make_win5():
+def make_win6():
 
     layout = [[sg.Text('Programa para juntar archivos tipo JSON')],
             [sg.Text("Elegir el archivo: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo3-")],
@@ -58,14 +67,14 @@ def make_win5():
             [sg.Button("Descargar Documento"), sg.Button("Regresar")]]
     return sg.Window('Ventana para Juntar Documento', layout, finalize=True)
 
-def make_win6():
+def make_win7():
 
     layout = [[sg.Text('Primer Paso Esquema MuSig para generar las claves iniciales')],
             [sg.Text("Elegir el archivo que se planea Firmar: "), sg.Input(change_submits=True), sg.FileBrowse(key="-Archivo7-")],
             [sg.Button("Crear Claves Esquema"),sg.Button("Regresar")]]
     return sg.Window('Ventana para Generar Claves Iniciales', layout, finalize=True)
 
-def make_win7():
+def make_win8():
 
     layout = [[sg.Text('Cambiar mis Claves Privada y Publica')],
             [sg.Button("Cambiar Claves"),sg.Button("Regresar")]]
@@ -83,8 +92,8 @@ while True:             # Event Loop
         elif window == window1:     # if closing win 1, exit program
             break
 
-    elif event == 'Generar mi Firma Esquema MuSig' and not window2:
-        window2 = make_win2()
+    elif event == 'Generar mi Firma Esquema MuSig':
+        window3 = make_win3()
 
     elif event == 'Firmar el Documento':
         size = os.path.getsize(values["-Archivo-"])
@@ -101,7 +110,7 @@ while True:             # Event Loop
 
 
     elif event == 'Verificar Firma':
-        window3 = make_win3()
+        window4 = make_win4()
 
     elif event == 'Verificar':
         size = os.path.getsize(values['-Archivo2-']) 
@@ -154,7 +163,7 @@ while True:             # Event Loop
             json.dump(data, f)
 
     elif event == 'Juntar Firmas':
-        window4 = make_win4()
+        window5 = make_win5()
 
     elif event == 'Generar Firma MuSig':
 
@@ -191,7 +200,7 @@ while True:             # Event Loop
             json.dump(datos_firma, f)    
         
     elif event == 'Juntar Documentos':
-        window5 = make_win5()
+        window6 = make_win6()
 
     elif event == 'Agregar Documento':
         path_archivo = values["-Archivo3-"]
@@ -208,15 +217,17 @@ while True:             # Event Loop
         lista_documentos = []
 
     elif event == 'Generar mis claves Iniciales':
-        window6 = make_win6()
+        window7 = make_win7()
 
     elif event == 'Cambiar mis claves':
-        window7 = make_win7()
+        window8 = make_win8()
 
     elif event == "Cambiar Claves":
         ckp.create_keypair(1)["users"]
 
         sg.Popup('Se han cambiado las claves de manera exitosa')
 
+    elif event == "Esquema MuSig":
+        window2 = make_win2()
 
 window.close()

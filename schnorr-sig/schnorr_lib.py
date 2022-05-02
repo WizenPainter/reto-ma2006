@@ -518,7 +518,7 @@ def schnorr_verify_test(M, archivo_verificacion) -> bool:
     if len(M) != 32:
         raise ValueError('The message must be a 32-byte array.')
 
-    with open('firma_digital.json') as json_file:
+    with open(archivo_verificacion) as json_file:
         data = json.load(json_file)
 
     clave_p = data['Firma']
@@ -554,6 +554,8 @@ def merge_JsonFiles(filename):
     for f1 in filename:
         with open(f1, 'r') as infile:
             result.append(json.load(infile))
+
+        
 
     with open('claves_firma.json', 'w') as output_file:
         json.dump(result, output_file)
