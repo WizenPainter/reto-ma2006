@@ -41,7 +41,7 @@ def make_win1():
     [sg.Text('Firma criptográfica Schnorr — Esquema MuSig', pad=((130,0), (5,3)), font='Helvetica 15 italic', background_color='#362992')],
     [sg.Image(flower_base64, pad=((180,0), (5,0.5)))],
      [sg.Text('Fundación Teletón', pad=((195,0), (0,20)), font='Helvetica 20', background_color='#362992')], 
-    [sg.Button("Esquema MuSig", pad=((64,0),(1,12)), font='Helvetica 17 italic', button_color=('white', '#52CAF6')), sg.Button('Verificar Firma', pad=((10,0),(1,12)), font='Helvetica 17 italic', button_color=('white', '#52CAF6')), sg.Button("Cambiar mis claves",  pad=((10,0),(1,12)), font='Helvetica 17 italic', button_color=('white', '#52CAF6'))],
+    [sg.Button("Esquema MuSig", pad=((64,0),(1,12)), font='Helvetica 17 italic', button_color=('white', '#362992')), sg.Button('Verificar Firma', pad=((10,0),(1,12)), font='Helvetica 17 italic', button_color=('white', '#362992')), sg.Button("Cambiar mis claves",  pad=((10,0),(1,12)), font='Helvetica 17 italic', button_color=('white', '#362992'))],
     [sg.Button('Salir', pad=((526,0),(5,10)),font='Helvetica 15 italic', button_color=('white','black'))]]
     return sg.Window('Inicio del programa criptográfico Schnorr', layout, sg.theme_background_color('#362992'), size=(600,400), finalize=True) 
 
@@ -142,16 +142,16 @@ while True:             # Event Loop
 
     elif event == 'Firmar el Documento':
         size = os.path.getsize(values["-Archivo-"])
-
+        claves = values["-Archivo4-"]
         n_usuario = int(float(values["-Claves-"]))
 
         M = hashPDF(values["-Archivo-"], size)
-        s = sl.schnorr_musig_firmar('claves_firma.json', M, n_usuario)
+        s = sl.schnorr_musig_firmar(claves, M, n_usuario)
 
 
         #llave_privada = privada.hex()
 
-        sg.Popup("Firma Usuario: ", s, font='Helvetica 16 bold italic', background_color='#52CAF6')
+        sg.Popup("Firma Usuario: ", s, font='Helvetica 16', background_color='#362992')
 
 
     elif event == 'Verificar Firma':
@@ -166,9 +166,9 @@ while True:             # Event Loop
         result = sl.schnorr_verify_musig(M, path_firma)
 
         if result:
-            sg.Popup("La firma es VALIDA para este mensaje y clave pública", font='Helvetica 16 bold italic', background_color='#53CAF6')
+            sg.Popup("La firma es VALIDA para este mensaje y clave pública", font='Helvetica 16', background_color='#362992')
         else:
-            sg.Popup("La firma no es VALIDA para este mensaje y clave pública", font='Helvetica 16 bold italic', background_color='#53CAF6')
+            sg.Popup("La firma no es VALIDA para este mensaje y clave pública", font='Helvetica 16', background_color='#362992')
 
     elif event == "Crear Claves Esquema":
         # sig_bytes = bytes.fromhex(values["-Firma-"])
@@ -197,7 +197,7 @@ while True:             # Event Loop
 
         #Pi = sl.pubkey_gen_from_hex(priv_key)
 
-        sg.Popup("Clave Publica", Pi, "Ri", Ri, font='Helvetica 16 bold italic', background_color='#53CAF6')
+        sg.Popup("Clave Publica", Pi, "Ri", Ri, font='Helvetica 16 ', background_color='#362992')
 
         #cl = str(sl.int_from_bytes(Pi))
 
@@ -230,7 +230,7 @@ while True:             # Event Loop
 
         X = sl.bytes_from_point(data[0]['firma agregada'])
 
-        sg.Popup("Firma", signature_bytes.hex(), "Firma Agregada", X.hex(), font='Helvetica 16 bold italic',background_color='#53CAF6')
+        sg.Popup("Firma", signature_bytes.hex(), "Firma Agregada", X.hex(), font='Helvetica 16',background_color='#362992')
 
 #        signature_bytes = sl.int_from_bytes(signature_bytes)
 
@@ -251,12 +251,12 @@ while True:             # Event Loop
         path_archivo = values["-Archivo3-"]
         lista_documentos.append(path_archivo)
         print(lista_documentos)
-        sg.PopupScrolled("Los siguientes archivos son los que se van a juntar: \n", f"{lista_documentos}", font='Helvetica 16 bold italic', background_color='#53CAF6')
+        sg.PopupScrolled("Los siguientes archivos son los que se van a juntar: \n", f"{lista_documentos}", font='Helvetica 16', background_color='#362992')
 
     
     elif event == 'Descargar Documento':
         sl.merge_JsonFiles(lista_documentos)
-        sg.Popup('Se ha descargado el documento', font='Helvetica 16 bold italic', background_color='#53CAF6')
+        sg.Popup('Se ha descargado el documento', font='Helvetica 16', background_color='#362992')
 
     elif event == 'Borrar Documentos':
         lista_documentos = []
@@ -270,7 +270,7 @@ while True:             # Event Loop
     elif event == "Cambiar Claves":
         ckp.create_keypair(1)["users"]
 
-        sg.Popup('¡Se han cambiado las claves de manera exitosa', font='Helvetica 16 bold italic', background_color='#53CAF6')
+        sg.Popup('¡Se han cambiado las claves de manera exitosa', font='Helvetica 16', background_color='#362992')
 
     elif event == "Esquema MuSig":
         window2 = make_win2()
